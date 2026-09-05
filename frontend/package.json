@@ -1,0 +1,18 @@
+{
+  "name": "sistema-administracion-web",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^5.1.1",
+    "@tailwindcss/vite": "^4.1.13",
+    "svelte": "^5.38.6",
+    "tailwindcss": "^4.1.13",
+    "vite": "^6.3.5"
+  }
+}
