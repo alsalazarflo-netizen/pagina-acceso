@@ -1,5 +1,6 @@
 <script>
   import { onMount } from "svelte";
+  import DeepSea from "./lib/DeepSea.svelte";
   import { clearSession, getToken, login, me, saveSession } from "./lib/auth.js";
 
   let email = $state("");
@@ -10,36 +11,24 @@
   let error = $state("");
   let usuario = $state(null);
 
-  const roles = {
-    admin: "Administrador",
-    gerente: "Gerente",
-    empleado: "Empleado",
-  };
-
   onMount(async () => {
     if (!getToken()) {
-      clearSession();
-      usuario = null;
       checking = false;
       return;
     }
-
     try {
-      const data = await me();
-      usuario = data.usuario;
+      usuario = (await me()).usuario;
     } catch {
       clearSession();
-      usuario = null;
     } finally {
       checking = false;
     }
   });
 
-  async function onSubmit(event) {
-    event.preventDefault();
+  async function onSubmit(e) {
+    e.preventDefault();
     error = "";
     loading = true;
-
     try {
       const data = await login(email.trim(), password);
       saveSession(data.token, data.usuario);
@@ -51,146 +40,62 @@
       loading = false;
     }
   }
-
-  function logout() {
-    clearSession();
-    usuario = null;
-    email = "";
-    password = "";
-    error = "";
-  }
 </script>
 
-<div class="relative min-h-screen overflow-hidden">
-  <div
-    class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(24,70,60,0.14),_transparent_42%),radial-gradient(circle_at_bottom_right,_rgba(180,120,70,0.12),_transparent_38%)]"
-  ></div>
-  <div
-    class="pointer-events-none absolute -top-24 -right-16 h-72 w-72 rounded-full border border-[#18463c]/15"
-  ></div>
-  <div
-    class="pointer-events-none absolute -bottom-20 -left-10 h-56 w-56 rounded-full border border-[#18463c]/10"
-  ></div>
+<svelte:head>
+  <title>Aqua · Acceso</title>
+</svelte:head>
 
-  <main class="relative mx-auto flex min-h-screen max-w-5xl items-center px-6 py-12">
-    {#if checking}
-      <p class="mx-auto text-sm text-mist">Cargando…</p>
-    {:else if usuario}
-      <section
-        class="mx-auto w-full max-w-lg rounded-3xl border border-stone-200/80 bg-paper p-8 shadow-[0_24px_60px_-28px_rgba(28,25,23,0.45)]"
+<DeepSea />
+
+<main class="relative z-10 flex min-h-screen items-center justify-center p-6">
+  {#if checking}
+    <p class="text-sm text-white/80">Cargando…</p>
+  {:else if usuario}
+    <section class="w-full max-w-md rounded-3xl border border-white/25 bg-white/15 p-8 text-white shadow-2xl backdrop-blur-md">
+      <p class="text-xs tracking-[0.22em] text-cyan-100 uppercase">Sesión activa</p>
+      <h1 class="mt-2 font-display text-4xl">Hola, {usuario.nombre.split(" ")[0]}</h1>
+      <p class="mt-2 text-sm text-white/70">{usuario.email} · {usuario.rol}</p>
+      <button
+        class="mt-8 w-full rounded-2xl border border-white/30 py-3 text-sm"
+        onclick={() => {
+          clearSession();
+          usuario = null;
+        }}>Cerrar sesión</button
       >
-        <p class="text-xs font-medium tracking-[0.22em] text-pine uppercase">Sesión activa</p>
-        <h1 class="font-display mt-3 text-4xl leading-tight text-ink">
-          Hola, {usuario.nombre.split(" ")[0]}
-        </h1>
-        <p class="mt-2 text-mist">Has entrado al sistema de administración.</p>
-
-        <dl class="mt-8 space-y-3 rounded-2xl bg-sand/80 p-5">
-          <div class="flex justify-between gap-4 text-sm">
-            <dt class="text-mist">Nombre</dt>
-            <dd class="font-medium">{usuario.nombre}</dd>
-          </div>
-          <div class="flex justify-between gap-4 text-sm">
-            <dt class="text-mist">Correo</dt>
-            <dd class="font-medium">{usuario.email}</dd>
-          </div>
-          <div class="flex justify-between gap-4 text-sm">
-            <dt class="text-mist">Rol</dt>
-            <dd class="rounded-full bg-pine px-3 py-1 text-xs font-medium tracking-wide text-white">
-              {roles[usuario.rol] || usuario.rol}
-            </dd>
-          </div>
-        </dl>
-
-        <button
-          type="button"
-          class="mt-8 w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm font-medium text-ink transition hover:bg-sand"
-          onclick={logout}
-        >
-          Cerrar sesión
+    </section>
+  {:else}
+    <form
+      class="w-full max-w-sm rounded-3xl border border-white/25 bg-white/15 p-6 text-white shadow-2xl backdrop-blur-md"
+      onsubmit={onSubmit}
+    >
+      <p class="text-xs tracking-[0.28em] text-cyan-100 uppercase">Aqua</p>
+      <h1 class="mt-2 font-display text-3xl">Iniciar sesión</h1>
+      <p class="mt-1 mb-5 text-sm text-white/70">Accede a tu cuenta</p>
+      <input
+        class="mb-3 w-full rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm outline-none placeholder:text-white/40"
+        type="email"
+        placeholder="correo"
+        bind:value={email}
+        required
+      />
+      <div class="relative mb-3">
+        <input
+          class="w-full rounded-2xl border border-white/20 bg-white/10 px-4 py-3 pr-14 text-sm outline-none placeholder:text-white/40"
+          type={showPassword ? "text" : "password"}
+          placeholder="contraseña"
+          bind:value={password}
+          required
+          minlength="8"
+        />
+        <button type="button" class="absolute top-1/2 right-3 -translate-y-1/2 text-xs text-white/70" onclick={() => (showPassword = !showPassword)}>
+          {showPassword ? "Ocultar" : "Ver"}
         </button>
-      </section>
-    {:else}
-      <div class="grid w-full items-center gap-12 md:grid-cols-[1.1fr_0.9fr]">
-        <section class="hidden md:block">
-          <p class="text-xs font-medium tracking-[0.28em] text-pine uppercase">Interno</p>
-          <h1 class="font-display mt-4 max-w-md text-5xl leading-[1.12] text-ink">
-            Sistema de administración
-          </h1>
-          <p class="mt-5 max-w-sm text-base leading-relaxed text-mist">
-            Accede con tu cuenta para gestionar usuarios, departamentos y personal.
-          </p>
-        </section>
-
-        <section
-          class="rounded-3xl border border-stone-200/80 bg-paper p-7 shadow-[0_24px_60px_-28px_rgba(28,25,23,0.45)] sm:p-8"
-        >
-          <div class="mb-7 flex items-center gap-3">
-            <span
-              class="grid h-11 w-11 place-items-center rounded-2xl bg-pine font-display text-lg text-[#f3eee6]"
-            >
-              SA
-            </span>
-            <div>
-              <h2 class="text-lg font-medium text-ink">Iniciar sesión</h2>
-              <p class="text-sm text-mist">Usa tu correo institucional</p>
-            </div>
-          </div>
-
-          <form class="space-y-4" onsubmit={onSubmit}>
-            <label class="block">
-              <span class="mb-1.5 block text-sm font-medium">Correo</span>
-              <input
-                class="w-full rounded-2xl border border-stone-300 bg-white px-4 py-3 text-sm outline-none transition placeholder:text-stone-400 focus:border-pine focus:ring-4 focus:ring-pine/10"
-                type="email"
-                autocomplete="email"
-                placeholder="admin@empresa.com"
-                bind:value={email}
-                required
-              />
-            </label>
-
-            <label class="block">
-              <span class="mb-1.5 block text-sm font-medium">Contraseña</span>
-              <div class="relative">
-                <input
-                  class="w-full rounded-2xl border border-stone-300 bg-white px-4 py-3 pr-12 text-sm outline-none transition placeholder:text-stone-400 focus:border-pine focus:ring-4 focus:ring-pine/10"
-                  type={showPassword ? "text" : "password"}
-                  autocomplete="current-password"
-                  placeholder="••••••••"
-                  bind:value={password}
-                  required
-                  minlength="8"
-                />
-                <button
-                  type="button"
-                  class="absolute top-1/2 right-3 -translate-y-1/2 text-xs font-medium text-mist hover:text-ink"
-                  onclick={() => (showPassword = !showPassword)}
-                >
-                  {showPassword ? "Ocultar" : "Ver"}
-                </button>
-              </div>
-            </label>
-
-            {#if error}
-              <p class="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
-            {/if}
-
-            <button
-              type="submit"
-              class="w-full rounded-2xl bg-pine px-4 py-3 text-sm font-medium text-white transition hover:bg-pine-hover disabled:cursor-not-allowed disabled:opacity-60"
-              disabled={loading}
-            >
-              {loading ? "Entrando…" : "Entrar"}
-            </button>
-          </form>
-
-          <p class="mt-6 text-xs leading-relaxed text-mist">
-            Cuentas de prueba: <span class="text-ink">admin@empresa.com</span> / Admin1234
-            · <span class="text-ink">gerente@empresa.com</span> / Gerente1234
-          </p>
-        </section>
       </div>
-    {/if}
-  </main>
-</div>
+      {#if error}<p class="mb-3 text-sm text-red-200">{error}</p>{/if}
+      <button class="w-full rounded-2xl bg-cyan-200 py-3 text-sm font-medium text-cyan-950 disabled:opacity-50" disabled={loading}>
+        {loading ? "…" : "Entrar"}
+      </button>
+    </form>
+  {/if}
+</main>

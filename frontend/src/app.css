@@ -3,12 +3,6 @@
 @theme {
   --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Fraunces", ui-serif, Georgia, serif;
-  --color-ink: #1c1917;
-  --color-sand: #f3eee6;
-  --color-paper: #fffdf9;
-  --color-pine: #18463c;
-  --color-pine-hover: #12362f;
-  --color-mist: #8a8178;
 }
 
 html,
@@ -19,7 +13,7 @@ body,
 
 body {
   margin: 0;
-  color: var(--color-ink);
-  background: var(--color-sand);
+  color: #fff;
+  background: #146ea8;
   font-family: var(--font-sans);
 }
